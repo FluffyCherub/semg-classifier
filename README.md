@@ -1,6 +1,6 @@
 # semg-classifier
 
-Semg-classifier contains the Python code for my final year project, Machine Learning for Prosthetic Devices. It contains two files for dealing with pre-exisiting semg data from the [ninapro](http://ninapro.hevs.ch/) (not included as not personal own data). It also contains files dealing with the live collection, processing and position classification of data from semg reader - a [myo armband](https://www.robotshop.com/uk/myo-gesture-control-armband-black.html). This project was developed on the Spyder IDE and some code was taken directly from [shayanalibhatti's Finger-Movement-Classification...](https://github.com/shayanalibhatti/Finger-Movement-Classification-via-Machine-Learning-using-EMG-Armband-for-3D-Printed-Robotic-Hand).
+Semg-classifier contains the Python code for my final year project, Machine Learning for Prosthetic Devices. It contains files for processing pre-exisiting semg data from the [ninapro](http://ninapro.hevs.ch/) (not included as not my own personal data). It also contains files dealing with the live collection, processing and position classification of data from semg reader - a [myo armband](https://www.robotshop.com/uk/myo-gesture-control-armband-black.html). This project was developed on the Spyder IDE and some code was taken directly from [shayanalibhatti's Finger-Movement-Classification...](https://github.com/shayanalibhatti/Finger-Movement-Classification-via-Machine-Learning-using-EMG-Armband-for-3D-Printed-Robotic-Hand).
 
 ## Installation
 
