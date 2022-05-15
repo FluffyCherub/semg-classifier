@@ -21,7 +21,8 @@ global data_array
 #global time_array
 number_of_samples = 2000 #about 10-11 seconds
 number_of_samples *= 10 # About 100 seconds
-number_of_samples *= 1 # Creates number of movements
+
+label_val = 5 # Change for each new movement
 
 data_array=[]
 #time_array=[]
@@ -34,7 +35,7 @@ def update_stimulus(stimulus, t, start_1_time, stop_1_time, freq):
         stimulus[i] = t
     return stimulus
 
-def generate_stimulus(number_of_samples,time_taken):
+def generate_stimulus(number_of_samples, time_taken, label_val):
     #generate initial stimulus set to 0 i.e. rest
     stimulus = [0]*number_of_samples
     freq = time_taken/number_of_samples
@@ -43,30 +44,7 @@ def generate_stimulus(number_of_samples,time_taken):
     for i in range(1,11):
         time1 =10.0*i-5.0
         time2 =10.0*i
-        stimulus = update_stimulus(stimulus, 1, time1, time2, freq)
-    
-    # for i in range(11,21):
-    #     time1 =10.0*i-5.0
-    #     time2 =10.0*i
-    #     stimulus = update_stimulus(stimulus, 2, time1, time2, freq)
-        
-    # for i in range(21,31):
-    #     time1 =10.0*i-5.0
-    #     time2 =10.0*i
-    #     stimulus = update_stimulus(stimulus, 3, time1, time2, freq)
-    
-    # for i in range(31,41):
-    #     time1 =10.0*i-5.0
-    #     time2 =10.0*i
-    #     stimulus = update_stimulus(stimulus, 4, time1, time2, freq)
-        
-    # for i in range(41,51):
-    #     time1 =10.0*i-5.0
-    #     time2 =10.0*i
-    #     stimulus = update_stimulus(stimulus, 5, time1, time2, freq)
-    
-    #stimulus = update_stimulus(stimulus, 1, 5.0, 10.0, freq)
-    #stimulus = update_stimulus(stimulus, 1, 3.0, 4.0, freq)
+        stimulus = update_stimulus(stimulus, label_val, time1, time2, freq)
     return stimulus
 
 def check_if_process_running():
@@ -124,6 +102,8 @@ class Listener(myo.DeviceListener):
                 data_array.append(list(self.emg_data_queue))
                 self.emg_data_queue.clear()
                 return False
+            
+startTime = datetime.now()         
 
 while True:
     try:
@@ -157,34 +137,21 @@ time_taken = endTime - startTime
 print("Time Taken: ",time_taken)
 print("Sample rate:", number_of_samples/time_taken.total_seconds(), "per second")
 
-stimulus = generate_stimulus(number_of_samples,time_taken.total_seconds())
+stimulus = generate_stimulus(number_of_samples,time_taken.total_seconds(),label_val)
 stimulus = np.array(stimulus)
 
 print("Stimulus:", stimulus.shape)
 
 if emg_data.size:
     print(emg_data.shape)
-    fig, (ax1, ax2, ax3, ax4, ax5, ax6, ax7, ax8, ax9) = plt.subplots(9)
-    fig.suptitle('stimulus vs emg, all blocks')
-    ax1.plot(range(stimulus.shape[0]), stimulus , color ="orange")
-    ax2.plot(range(emg_data.shape[0]), emg_data[:,0] , color ="purple")
-    ax3.plot(range(emg_data.shape[0]), emg_data[:,1] , color ="purple")
-    ax4.plot(range(emg_data.shape[0]), emg_data[:,2] , color ="purple")
-    ax5.plot(range(emg_data.shape[0]), emg_data[:,3] , color ="purple")
-    ax6.plot(range(emg_data.shape[0]), emg_data[:,4] , color ="purple")
-    ax7.plot(range(emg_data.shape[0]), emg_data[:,5] , color ="purple")
-    ax8.plot(range(emg_data.shape[0]), emg_data[:,6] , color ="purple")
-    ax9.plot(range(emg_data.shape[0]), emg_data[:,7] , color ="purple")
-    plt.show()
     
-    with open('unprocessed_emg_data_5_2.csv', 'w', newline='') as outcsv:
+    with open('unprocessed_emg_data_5_2.csv', 'a', newline='') as outcsv:
         unprocessed_emg_data = csv.writer(outcsv)
-        unprocessed_emg_data.writerow(["Stimulus", "Emg1", "Emg2", "Emg3", "Emg4", "Emg5", "Emg6", "Emg7", "Emg8"])
-    
-        #unprocessed_emg_data.writerow(['John Smith', 'Accounting', 'November'])
-        #unprocessed_emg_data.writerow(['Erica Meyers', 'IT', 'March'])
         for a in range((emg_data.shape[0])):
             unprocessed_emg_data.writerow([stimulus[a], emg_data[a,0], emg_data[a,1], emg_data[a,2], emg_data[a,3], emg_data[a,4], emg_data[a,5], emg_data[a,6], emg_data[a,7]])
+
+    label = []
+    emg = []
 
     with open('unprocessed_emg_data_5_2.csv') as csv_file:
         csv_reader = csv.reader(csv_file, delimiter=',')
@@ -196,4 +163,27 @@ if emg_data.size:
             else:
                 #print(f'\t{row[0]} works in the {row[1]} department, and was born in {row[2]}.')
                 line_count += 1
+                label.append(int(row[0]))
+                ro = [int(row[1]),int(row[2]),int(row[3]),int(row[4]),int(row[5]),int(row[6]),int(row[7]),int(row[8])]
+                emg.append(ro)
         print(f'Processed {line_count} lines.')
+        
+        label = np.array(label)
+        emg = np.array(emg)
+        print(label.shape)
+        
+        fig, (ax1, ax2, ax3, ax4, ax5, ax6, ax7, ax8, ax9) = plt.subplots(9)
+        fig.suptitle('stimulus vs emg, all blocks')
+        ax1.plot(range(label.shape[0]), label , color ="orange")
+        ax2.plot(range(emg.shape[0]), emg[:,0] , color ="purple")
+        ax3.plot(range(emg.shape[0]), emg[:,1] , color ="purple")
+        ax4.plot(range(emg.shape[0]), emg[:,2] , color ="purple")
+        ax5.plot(range(emg.shape[0]), emg[:,3] , color ="purple")
+        ax6.plot(range(emg.shape[0]), emg[:,4] , color ="purple")
+        ax7.plot(range(emg.shape[0]), emg[:,5] , color ="purple")
+        ax8.plot(range(emg.shape[0]), emg[:,6] , color ="purple")
+        ax9.plot(range(emg.shape[0]), emg[:,7] , color ="purple")
+        plt.show()
+        
+
+

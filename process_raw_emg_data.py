@@ -21,12 +21,13 @@ from sklearn.neighbors import KNeighborsClassifier
 from sklearn import metrics
 from sklearn.neural_network import MLPClassifier
 from sklearn.metrics import confusion_matrix
+import seaborn as sns
 
 stimulus = []
 emg = []
 
 # Opening data and storing in correct format
-with open('unprocessed_emg_data_5.csv') as csv_file:
+with open('unprocessed_emg_data_5_2.csv') as csv_file:
     csv_reader = csv.reader(csv_file, delimiter=',')
     line_count = 0
     for row in csv_reader:
@@ -51,7 +52,7 @@ with open('unprocessed_emg_data_5.csv') as csv_file:
 #Process raw data
 start = 0
 end = round(len(stimulus),-1)
-period = 400 
+period = 200
 
 rms_emg = np.empty((int(round(end/10)),0))
 for b in range(8): #Number of blocks
@@ -86,18 +87,18 @@ for y in range(4, len(stimulus), 10):
 labels = np.array(labels)
 print("labels new shape:", len(labels))
 
-fig, axs = plt.subplots(9)
-fig.suptitle('Stimulus vs rms_emg, all blocks,'+str(period)+' Hz smoothing')
-axs[0].plot(range(labels.shape[0]), labels , color ="orange")
-axs[1].plot(range(rms_emg.shape[0]), rms_emg[:,0] , color ="purple")
-axs[2].plot(range(rms_emg.shape[0]), rms_emg[:,1] , color ="orange")
-axs[3].plot(range(rms_emg.shape[0]), rms_emg[:,2] , color ="green")
-axs[4].plot(range(rms_emg.shape[0]), rms_emg[:,3] , color ="yellow")
-axs[5].plot(range(rms_emg.shape[0]), rms_emg[:,4] , color ="brown")
-axs[6].plot(range(rms_emg.shape[0]), rms_emg[:,5] , color ="purple")
-axs[7].plot(range(rms_emg.shape[0]), rms_emg[:,6] , color ="orange")
-axs[8].plot(range(rms_emg.shape[0]), rms_emg[:,7] , color ="green")
-plt.show() 
+# fig, axs = plt.subplots(9)
+# fig.suptitle('Stimulus vs rms_emg, all blocks,'+str(period)+' Hz smoothing')
+# axs[0].plot(range(labels.shape[0]), labels , color ="orange")
+# axs[1].plot(range(rms_emg.shape[0]), rms_emg[:,0] , color ="purple")
+# axs[2].plot(range(rms_emg.shape[0]), rms_emg[:,1] , color ="orange")
+# axs[3].plot(range(rms_emg.shape[0]), rms_emg[:,2] , color ="green")
+# axs[4].plot(range(rms_emg.shape[0]), rms_emg[:,3] , color ="yellow")
+# axs[5].plot(range(rms_emg.shape[0]), rms_emg[:,4] , color ="brown")
+# axs[6].plot(range(rms_emg.shape[0]), rms_emg[:,5] , color ="purple")
+# axs[7].plot(range(rms_emg.shape[0]), rms_emg[:,6] , color ="orange")
+# axs[8].plot(range(rms_emg.shape[0]), rms_emg[:,7] , color ="green")
+# plt.show() 
 
 #Store processed data
 with open('processed_emg_data.csv', 'w', newline='') as outcsv:
@@ -153,6 +154,19 @@ print(predicted_emg)
 precent_accuracy = metrics.accuracy_score(test_labels, predicted_emg) *100
 print("Accuracy (KNN):",precent_accuracy)
 
+# cm = confusion_matrix(test_labels, predicted_emg)
+# print (cm.shape)
+# #cm = np.delete(cm, 0, 0)
+# #cm = np.delete(cm, 0, 1)
+# #a_list = list(range(1,cm.shape[0] +1))
+# a_list = list(range(0,cm.shape[0]))
+# ax = sns.heatmap(cm, annot=True, fmt='g', xticklabels=a_list, yticklabels=a_list);
+# ax.set_title('Confusion Matrix - Nearest Neighbours');
+# ax.set_xlabel('Predicted Movement')
+# ax.set_ylabel('Actual Movement')
+# print(a_list)
+# plt.show()
+
 #Test with MLP
 #solver='lbfgs' best for small, switched to 'adam' cause its better for large
 #65 (lri = 0.1) = 84.08, 75 = 82.62, 70 = 83.56, 67 =63.739999999999995
@@ -163,3 +177,16 @@ clf.fit(train_emg, train_labels)
 predicted_emg_mlp = clf.predict(test_emg)
 precent_accuracy = metrics.accuracy_score(test_labels, predicted_emg_mlp) *100
 print("Accuracy (MLP):",precent_accuracy)
+
+cm = confusion_matrix(test_labels, predicted_emg_mlp)
+print (cm.shape)
+cm = np.delete(cm, 0, 0)
+cm = np.delete(cm, 0, 1)
+a_list = list(range(1,cm.shape[0] +1))
+#a_list = list(range(0,cm.shape[0]))
+ax = sns.heatmap(cm, annot=True, fmt='g', xticklabels=a_list, yticklabels=a_list);
+ax.set_title('Confusion Matrix - Multilayer Perceptron');
+ax.set_xlabel('Predicted Movement')
+ax.set_ylabel('Actual Movement')
+print(a_list)
+plt.show()

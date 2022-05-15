@@ -18,10 +18,11 @@ from datetime import datetime
 
 startTime = datetime.now()
 
+#annots = loadmat('data\s27\S27_A1_E3.mat')
 #Load data
-#annots = loadmat('data\s1\S1_A1_E1.mat')
+annots = loadmat('data\s1\S1_A1_E1.mat')
 #annots = loadmat('data\s1\S1_A1_E2.mat')
-annots = loadmat('data\s1\S1_A1_E3.mat')
+#annots = loadmat('data\s1\S1_A1_E3.mat')
 
 # Get data
 header = annots['__header__']
@@ -37,8 +38,9 @@ restimulus = annots['restimulus']
 rerepetition = annots['rerepetition']
 
 #Checking data content
-print(emg.shape) #numpy array
-print(emg)
+print("size of data: ", emg.shape) #numpy array
+#print(emg)
+
 '''
 plt.title("Stimulus graph")
 plt.xlabel("X axis")
@@ -69,6 +71,7 @@ plt.show()'''
 
 start = 0
 end = round(len(stimulus),-1)
+# print(emg.shape[1])
 #end = 101010 # Has got to be muliple of 10, got to be more than size of array
 
 #First Action, 10 repetitions
@@ -90,18 +93,20 @@ end = round(len(stimulus),-1)
 #rms each value, for all bands
 
 rms_emg = np.empty((int(round(end/10)),0))
+period = 100
+# emg.shape[1] gets how many blocks there are
 for b in range(10):
     linend = 0
     rms  = []
     for x in range(start, end, 10):
-        linend = x + 90
+        linend = x + (period - 10)
         if (linend > end):
             linend = end
         #print(emg[x:linend,b])
         r = np.sqrt(np.mean(emg[x:linend,b]**2))
         rms.append(r)
     c = np.reshape(rms, (len(rms), 1))
-    print("RMS shape:",rms_emg.shape,"RMS to add shape:", c.shape)
+    #print("RMS shape:",rms_emg.shape,"RMS to add shape:", c.shape)
     rms_emg = np.append(rms_emg, c, axis=1)
 
 #Produces labels that match 10101 data set
@@ -143,8 +148,8 @@ plt.show()'''
 # Repetitiom = whuch repetition it was lassidied as
 # Split train and test data
 
-print(rms_emg.shape)
-print(len(new_repetition))
+# print(rms_emg.shape)
+# print(len(new_repetition))
 
 train_labels = []
 test_labels = []
@@ -181,26 +186,32 @@ test_labels = np.array(test_labels)
 #rest_emg = np.array(rest_emg)
 
 #Check to see if shape matches for testing classifier
-print("Train:", train_emg.shape,"Test: ",test_emg.shape)
-print(train_labels.shape, test_labels.shape)
+# print("Train:", train_emg.shape,"Test: ",test_emg.shape)
+# print(train_labels.shape, test_labels.shape)
+
+startTimeKNN = datetime.now()
 
 #KNN classifier 
-'''
-model = KNeighborsClassifier(n_neighbors=50)
+
+model = KNeighborsClassifier(n_neighbors=2)
 model.fit(train_emg,train_labels)
 predicted_emg= model.predict(test_emg)
 print(predicted_emg)
 precent_accuracy = metrics.accuracy_score(test_labels, predicted_emg) *100
-print("Accuracy (KNN):",precent_accuracy)'''
+print("Accuracy (KNN):",round(precent_accuracy, 2))
 
-#Mulitple layer perceptron classifier
+endTimeKNN = datetime.now()
 
-clf = MLPClassifier(solver='lbfgs', alpha=1e-4, hidden_layer_sizes=(75,), random_state=1,learning_rate_init=0.1)
-clf.fit(train_emg, train_labels)
-predicted_emg_mlp = clf.predict(test_emg)
-#print(predicted_emg_mlp[100])
-precent_accuracy = metrics.accuracy_score(test_labels, predicted_emg_mlp) *100
-print("Accuracy (MLP):",precent_accuracy)
+# #Mulitple layer perceptron classifier
+# startTimeMLP = datetime.now()
+# clf = MLPClassifier(solver='adam', alpha=1e-4, hidden_layer_sizes=(150,), random_state=1,learning_rate_init=0.05)
+# clf.fit(train_emg, train_labels)
+# predicted_emg_mlp = clf.predict(test_emg)
+# #print(predicted_emg_mlp[100])
+# precent_accuracy = metrics.accuracy_score(test_labels, predicted_emg_mlp) *100
+# print("Accuracy (MLP):",precent_accuracy)
+
+# endTimeMLP = datetime.now()
 
 #cm = confusion_matrix(test_labels, predicted_emg)
 #print (cm.shape)
@@ -226,5 +237,5 @@ print("Accuracy (MLP):",precent_accuracy)
 #ax.set_ylabel('Actual Movement')
 ##print(a_list)
 #plt.show()
-
-print("Time Taken: ",datetime.now() - startTime)
+print("Time Taken (KNN): ",endTimeKNN - startTimeKNN)
+#print("Time Taken (MLP): ",endTimeMLP - startTimeMLP)

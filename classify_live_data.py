@@ -19,16 +19,28 @@ import sys
 import csv
 import numpy as np
 from sklearn.neighbors import KNeighborsClassifier
-from sklearn import metrics
-from sklearn.neural_network import MLPClassifier
-from sklearn.metrics import confusion_matrix
+#from sklearn import metrics
+#from sklearn.neural_network import MLPClassifier
+#from sklearn.metrics import confusion_matrix
+import serial
+#import time
+
+arduino = serial.Serial(port='COM4', baudrate=115200, timeout=.1) # LEDs
+# arduino = serial.Serial(port='COM5', baudrate=115200, timeout=.1) # Robot
 
 global data_array
 global number_of_samples
 global time_array
+
 time_array = []
 data_array=[]
-number_of_samples = 200
+number_of_samples = 50 # 20 ~0.5s
+
+def write_read(x):
+    arduino.write(bytes(x, 'utf-8'))
+    time.sleep(0.05)
+    data = arduino.readline()
+    return data
 
 def check_if_process_running():
     try:
@@ -54,7 +66,6 @@ def restart_process():
     while(check_if_process_running()==False):
         path = r'C:\Program Files (x86)\Thalmic Labs\Myo Connect\Myo Connect.exe'
         os.startfile(path)
-        time.sleep(1)
 
     print("Process started")
     return True
@@ -66,10 +77,8 @@ class Listener(myo.DeviceListener):
         self.emg_data_queue = deque(maxlen=n)
         self.time_data_queue = deque(maxlen=n)
         
-
-    #Problem code
     def on_connected(self, event):
-        print("Myo Connected")
+        #print("Myo Connected")
         self.started = time.time()
         event.device.stream_emg(True)
         
@@ -110,7 +119,7 @@ with open('processed_emg_data.csv') as csv_file:
 
 train_rms = np.array(rms_emg)
 train_labels = np.array(labels)
-model = KNeighborsClassifier(n_neighbors=2)
+model = KNeighborsClassifier(n_neighbors=5)
 model.fit(train_rms,train_labels)
 
 #predicted= model.predict(test_rms)
@@ -133,7 +142,7 @@ def get_predicted():
             start = 0
             end = round(len(emg),-1)
             rms_emg = np.empty((int(round(end/10)),0))
-            period = 400 
+            period = 200
             for b in range(8): #Number of blocks
                 linend = 0
                 rms = []
@@ -165,25 +174,47 @@ def get_predicted():
             # Wait for 3 seconds until Myo Connect.exe starts
             time.sleep(3)
 
-predicted = np.array([])
-times = np.array([])
-#predicted, times = get_predicted()
+#predicted = np.array([])
+#times = np.array([])
+predicted, times = get_predicted()
 #print(predicted, times)
 
-#plt.axis([0, 10, 0, 1])
+# plt.axis([0, 10, 0, 1])
+
+timeout = 1.0 #seconds
 try:
     while True:
-        #y = np.random.random()
+        timeout_start = time.time()
+        
         p, t = get_predicted()
         predicted = np.append(predicted, p)
         times = np.append(times, t)
-        plt.scatter(times, predicted, c='red', marker='x')
+        # if time.time() > (timeout_start + timeout):
+        #     now = datetime.now()
+        #     date_time = now.strftime("%m/%d/%Y, %H:%M:%S")
+        #     print("Ran out of time at: ", date_time)
+        #     pass
+        
+        #Communicate with arudino
+        c = 0
+        total = 0
+        for num in p:
+            c+=1
+            total += num 
+        value = write_read(str(int(round(total/c))))
+        print(value, times[-1])
+        
+        for num in p:
+            value = write_read(str(num))
+        #Plotting values
+        #print(p, t)
+        #plt.scatter(times, predicted, c='red', marker='x')
         #plt.plot(times, predicted)
-        plt.pause(0.05)
+        #plt.pause(0.01)
 except KeyboardInterrupt:
     print('interrupted!')
     try:
         sys.exit(0)
     except SystemExit:
         os._exit(0)
-plt.show()
+#plt.show()
